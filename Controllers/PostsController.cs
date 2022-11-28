@@ -1,6 +1,6 @@
-﻿using FileUpload.Interfaces;
+﻿using FileUpload.Entities;
+using FileUpload.Interfaces;
 using FileUpload.Requests;
-using FileUpload.Response;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,27 +26,32 @@ namespace FileUpload.Controllers
         {
             if (postRequest == null)
             {
-                return BadRequest(new PostResponse { Success = false, ErrorCode = "S01", Error = "Invalid post request" });
+                return BadRequest("Invalid post request");
             }
 
             if (string.IsNullOrEmpty(Request.GetMultipartBoundary()))
             {
-                return BadRequest(new PostResponse { Success = false, ErrorCode = "S02", Error = "Invalid post header" });
+                return BadRequest("Invalid post header");
             }
 
             if (postRequest.Image != null)
             {
                 await postService.SavePostImageAsync(postRequest);
             }
+            var post = new Entities.Post
+            {
+                UserId = postRequest.UserId,
+                Description = postRequest.Description,
+                Imagepath = postRequest.ImagePath,
+                Ts = DateTime.Now,
+                Published = true
+            };
+
+
 
             var postResponse = await postService.CreatePostAsync(postRequest);
 
-            if (!postResponse.Success)
-            {
-                return NotFound(postResponse);
-            }
-
-            return Ok(postResponse.Post);
+            return Ok();
 
         }
     }

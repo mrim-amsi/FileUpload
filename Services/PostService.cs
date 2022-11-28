@@ -1,10 +1,6 @@
 ﻿using FileUpload.Entities;
-using FileUpload.Helpers;
 using FileUpload.Interfaces;
 using FileUpload.Requests;
-using FileUpload.Response;
-using FileUpload.Response.Models;
-
 namespace FileUpload.Services
 {
     public class PostService : IPostService
@@ -18,7 +14,7 @@ namespace FileUpload.Services
             this.environment = environment;
         }
 
-        public async Task<PostResponse> CreatePostAsync(PostRequest postRequest)
+        public async Task<string> CreatePostAsync(PostRequest postRequest)
         {
             var post = new Entities.Post
             {
@@ -35,11 +31,11 @@ namespace FileUpload.Services
 
             if (saveResponse < 0)
             {
-                return new PostResponse { Success = false, Error = "Issue while saving the post", ErrorCode = "CP01" };
+                return "Issue while saving the post";
             }
 
             var postEntity = postEntry.Entity;
-            var postModel = new PostModel
+            var postModel = new Post
             {
                 Id = postEntity.Id,
                 Description = postEntity.Description,
@@ -49,15 +45,19 @@ namespace FileUpload.Services
 
             };
 
-            return new PostResponse { Success = true, Post = postModel };
+            return "sc";
 
         }
 
         public async Task SavePostImageAsync(PostRequest postRequest)
         {
-            var uniqueFileName = FileHelper.GetUniqueFileName(postRequest.Image.FileName);
-            
-            var uploads = Path.Combine(environment.WebRootPath, "users", "posts", postRequest.UserId.ToString());
+            var FileName = Path.GetFileName(postRequest.Image.FileName);
+            var uniqueFileName = string.Concat(Path.GetFileNameWithoutExtension(FileName)
+                                , "_"
+                                , Guid.NewGuid().ToString().AsSpan(0, 4)
+                                , Path.GetExtension(FileName));
+
+              var uploads = Path.Combine(environment.WebRootPath, "users", "posts", postRequest.UserId.ToString());
             
             var filePath = Path.Combine(uploads, uniqueFileName);
             
